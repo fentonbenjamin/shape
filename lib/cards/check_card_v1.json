@@ -1,0 +1,127 @@
+{
+  "protocol": "card-protocol",
+  "card_id": "card_2026_03_23_check_card_v1",
+  "spec_ref": "spec_card_v1_0_1",
+  "card_kind": "check",
+  "version": "1.0.0",
+  "title": "Check Card v1 — Foundation Verification Stub",
+
+  "intent": "Independently verify that the foundation set (spec + schema + boot) is correct, not just internally consistent. A deterministic boot can be deterministically wrong — this card catches that.",
+
+  "context": {
+    "problem": "Boot proves integrity (I got this hash). Check proves correctness (this hash means what it should). Without an independent verifier, the system can be self-consistent but wrong.",
+    "scope": "Minimal stub: 4 assertions. Not a full test suite. The first metacognitive primitive."
+  },
+
+  "transform": {
+    "input_shape": "A booted substrate with genesis state + the 3 foundation cards (spec, schema, boot).",
+    "sieve_rule": "Run 4 verification checks. Emit structured pass/fail results. Any failure blocks the system from accepting further cards.",
+    "output_shape": "Check result artifact: 4 assertions with pass/fail + evidence."
+  },
+
+  "outcome": {
+    "output_success": "All 4 checks pass. Check result artifact is written to checks/ directory.",
+    "outcome_success": "The foundation is proven correct, not just consistent. The system can be trusted to accept new cards."
+  },
+
+  "constraints": [
+    "Check must be independent of boot — it cannot rely on boot's own output to verify boot.",
+    "Check must be deterministic and reproducible.",
+    "Check must fail-closed: any assertion failure means the foundation is not proven.",
+    "Check result must be a structured artifact, not prose."
+  ],
+
+  "governance": {
+    "state": "proposed",
+    "note": "Check cards are the system's self-awareness. A failed check should produce a next-action recommendation, not just a failure report."
+  },
+
+  "checks": [
+    {
+      "check_id": "schema_conformance",
+      "description": "Spec card validates against the schema card's schema_instance.",
+      "given": "spec_card_v1_0_1 + schema_instance_strict_v1",
+      "when": "Validate spec card against JSON Schema.",
+      "then": "Validation passes with zero errors.",
+      "severity": "blocking"
+    },
+    {
+      "check_id": "genesis_hash_expected",
+      "description": "Genesis hash matches expected value computed from canonical inputs.",
+      "given": "Booted substrate with genesis event.",
+      "when": "Recompute genesis hash from canonical JSON of spec + schema + boot + genesis event.",
+      "then": "Computed hash matches stored genesis hash exactly.",
+      "severity": "blocking"
+    },
+    {
+      "check_id": "invariant_pass",
+      "description": "All spec card invariants hold in the genesis state.",
+      "given": "Genesis state + spec card invariants list.",
+      "when": "Evaluate each invariant against genesis state.",
+      "then": "All invariants pass. No canonical state exists without ratification (genesis is proposed, not ratified).",
+      "severity": "blocking"
+    },
+    {
+      "check_id": "idempotent_reboot_parity",
+      "description": "Re-running boot from scratch produces identical genesis hash.",
+      "given": "Same 3 foundation cards as inputs.",
+      "when": "Boot a second time into a clean directory.",
+      "then": "Genesis hash from second boot == genesis hash from first boot.",
+      "severity": "blocking"
+    }
+  ],
+
+  "check_result_shape": {
+    "type": "object",
+    "required": ["check_card_ref", "timestamp", "assertions", "overall_result"],
+    "properties": {
+      "check_card_ref": "card_id of this check card",
+      "timestamp": "ISO 8601 UTC",
+      "assertions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["check_id", "result", "evidence"],
+          "properties": {
+            "check_id": "string",
+            "result": {"enum": ["pass", "fail"]},
+            "evidence": "string or object with details"
+          }
+        }
+      },
+      "overall_result": {"enum": ["pass", "fail"]},
+      "next_action": "string — what to do if any check fails"
+    }
+  },
+
+  "evaluation": {
+    "output_success": "Check result artifact written with 4 assertions, all pass.",
+    "outcome_success": "Foundation is independently verified. System is ready for use."
+  },
+
+  "failure_modes": [
+    "Check passes when it shouldn't — false positive (spec violation undetected).",
+    "Check fails on valid foundation — false negative (overly strict assertion).",
+    "Check result not written — silent failure.",
+    "Check depends on boot internals — loses independence."
+  ],
+
+  "degrade_policy": {
+    "must_persist": ["intent", "checks", "check_result_shape", "constraints"],
+    "can_degrade": ["evaluation details", "failure_modes"],
+    "rule": "The 4 checks and the result shape must persist. A cold agent must be able to run verification from this card alone."
+  },
+
+  "source_refs": [
+    "card:spec_card_v1_0_1",
+    "card:card_2026_03_23_schema_card_v1",
+    "card:card_2026_03_23_boot_card_v1",
+    "topic:mvp-card-set"
+  ],
+
+  "conformance": {
+    "profile": "strict",
+    "validated_against": "spec_card_v1_0_1",
+    "status": "proposed"
+  }
+}

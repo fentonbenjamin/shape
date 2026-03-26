@@ -1,0 +1,97 @@
+{
+  "protocol": "card-protocol",
+  "card_id": "card_2026_03_25_sieve_card_v1",
+  "spec_ref": "spec_card_v1_0_1",
+  "card_kind": "sieve",
+  "version": "1.0.0",
+  "title": "Sieve Card v1 — Shaping Layer",
+
+  "intent": "Name the shaping layer that turns raw source material or source artifacts into the next candidate artifact with visible preservation, declared loss, and explicit check surfaces.",
+
+  "context": {
+    "problem": "Boot, schema, and check can govern a substrate, but the protocol also needs a named shaping layer that decides what survives from raw material into the next artifact.",
+    "scope": "Core card set admission. Detailed proving profiles and host-specific sieve variants can evolve separately."
+  },
+
+  "transform": {
+    "input_shape": "Raw source material, annotated excerpts, or source artifacts containing more information than the next artifact should carry.",
+    "sieve_rule": "Shape source material into a candidate artifact by declaring what is preserved, what is dropped, what loss is declared, and what checks must witness the result before trust.",
+    "output_shape": "Candidate artifact plus visible preservation and loss posture, with an explicit check surface."
+  },
+
+  "outcome": {
+    "output_success": "A reviewer can inspect the resulting artifact and tell what the sieve preserved, what it dropped, and what still requires check.",
+    "outcome_success": "Sieve is available as canonical protocol vocabulary instead of remaining implicit inside transforms or host-specific tooling."
+  },
+
+  "constraints": [
+    "A sieve must declare what it preserves, not only what it drops.",
+    "A sieve may compress, but it may not silently upgrade compression into truth.",
+    "A sieve must emit or point to an explicit check surface.",
+    "A sieve must preserve lineage back to source material or source artifacts.",
+    "A canonical sieve card should stay simpler than the proving profiles that justify it."
+  ],
+
+  "governance": {
+    "state": "proposed",
+    "note": "Sieve is part of the current core card set and remains subject to the same promotion and supersession rules as other cards."
+  },
+
+  "sieve_contract": {
+    "accepted_inputs": [
+      "raw intent fragment",
+      "source artifact",
+      "annotated excerpt"
+    ],
+    "preserve": [
+      "artifact identity",
+      "intent",
+      "material constraints",
+      "source lineage"
+    ],
+    "drop": [
+      "non-promoted residue",
+      "host-specific noise not needed for the next artifact"
+    ],
+    "declare_loss": [
+      "meaningful dropped material",
+      "ambiguities deferred to later artifacts or checks"
+    ],
+    "allowed_outputs": [
+      "candidate artifact",
+      "check artifact"
+    ]
+  },
+
+  "check_surface": {
+    "required_checks": [
+      "preservation_visible",
+      "declared_loss_visible",
+      "lineage_present"
+    ],
+    "failure_gate": "If the shaping result hides loss, loses lineage, or bypasses check, it should not be trusted or promoted."
+  },
+
+  "evaluation": {
+    "output_success": "The current core card set includes a named shaping layer.",
+    "outcome_success": "Tools and hosts can invoke canonical Sieve directly when running shaping or promotion tasks."
+  },
+
+  "degrade_policy": {
+    "must_persist": ["intent", "transform", "constraints", "sieve_contract", "check_surface"],
+    "can_degrade": ["evaluation"],
+    "rule": "A cold reader must still be able to tell what Sieve is for and why it remains coupled to Check."
+  },
+
+  "source_refs": [
+    "card:card_2026_03_23_boot_card_v1",
+    "card:card_2026_03_23_check_card_v1",
+    "topic:next-wave-cards"
+  ],
+
+  "conformance": {
+    "profile": "strict",
+    "validated_against": "spec_card_v1_0_1",
+    "status": "proposed"
+  }
+}

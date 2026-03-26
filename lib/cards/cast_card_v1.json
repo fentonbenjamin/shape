@@ -1,0 +1,96 @@
+{
+  "protocol": "card-protocol",
+  "card_id": "card_2026_03_25_cast_card_v1",
+  "spec_ref": "spec_card_v1_0_1",
+  "card_kind": "cast",
+  "version": "1.0.0",
+  "title": "Cast Card v1 — Host Embodiment",
+
+  "intent": "Name the host-facing embodiment step that turns a sieved candidate artifact into a usable cast while preserving required meaning, declaring flattening, and exposing an explicit check surface.",
+
+  "context": {
+    "problem": "A sieved candidate artifact still needs to be rendered into a host-facing form that another human or model can actually encounter. Without a named cast step, host embodiment remains implicit and flattening can hide in implementation details.",
+    "scope": "Canonical host-embodiment card for the current public cast family. The first public family includes a review-markdown cast and a JSON host-view cast. Richer cast families and cross-host comparisons can evolve separately."
+  },
+
+  "transform": {
+    "input_shape": "Candidate artifact with visible lineage and declared-loss posture.",
+    "sieve_rule": "Render the candidate into a host-facing form while preserving identity, intent, constraints, and lineage; declare flattening; emit a check surface that can witness what survived.",
+    "output_shape": "Host-facing cast artifact plus explicit preservation and flattening witness."
+  },
+
+  "outcome": {
+    "output_success": "A reviewer can inspect the cast and tell what survived, what flattened, and what the check should verify.",
+    "outcome_success": "Cast becomes canonical protocol vocabulary and a usable step in runnable host flows instead of remaining implied by tooling."
+  },
+
+  "constraints": [
+    "A cast must preserve identity, intent, constraints, and lineage from the candidate artifact.",
+    "A cast must declare host flattening rather than hiding it.",
+    "A cast must emit or point to a check artifact.",
+    "A canonical cast card should stay narrower than the host family still under proving."
+  ],
+
+  "governance": {
+    "state": "proposed",
+    "note": "Cast is canonical protocol vocabulary for host embodiment. Specific host media and richer cast families can supersede this card later."
+  },
+
+  "cast_profile": {
+    "boot_medium": "git",
+    "host_medium": "review_markdown",
+    "host_media": [
+      "review_markdown",
+      "host_json_view"
+    ],
+    "preserve": [
+      "artifact identity",
+      "intent",
+      "constraints",
+      "source lineage"
+    ],
+    "flatten": [
+      "internal context detail",
+      "declared-loss item content"
+    ],
+    "emit": [
+      "host-facing markdown cast",
+      "host-facing json host view",
+      "diff-based check artifact"
+    ]
+  },
+
+  "check_surface": {
+    "required_checks": [
+      "preserved_title",
+      "preserved_intent",
+      "preserved_constraints",
+      "preserved_lineage",
+      "flattening_declared"
+    ],
+    "failure_gate": "If the cast loses identity, intent, constraints, or lineage, or if host flattening is hidden, it should not be trusted or promoted."
+  },
+
+  "evaluation": {
+    "output_success": "The current core card set includes a named cast step for a small public cast family.",
+    "outcome_success": "Tools and hosts can invoke canonical Cast directly when rendering candidate artifacts into a checkable host form."
+  },
+
+  "degrade_policy": {
+    "must_persist": ["intent", "transform", "constraints", "cast_profile", "check_surface"],
+    "can_degrade": ["evaluation"],
+    "rule": "A cold reader must still be able to tell what Cast does and how it stays coupled to Check."
+  },
+
+  "source_refs": [
+    "card:card_2026_03_25_sieve_card_v1",
+    "card:card_2026_03_23_check_card_v1",
+    "topic:next-wave-cards"
+  ],
+
+  "conformance": {
+    "profile": "strict",
+    "validated_against": "spec_card_v1_0_1",
+    "status": "proposed"
+  }
+}
