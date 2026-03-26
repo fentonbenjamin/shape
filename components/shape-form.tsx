@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ShapeProfile } from "@/lib/types";
 
 export function ShapeForm({
   onResult,
@@ -10,6 +11,7 @@ export function ShapeForm({
   onError: (msg: string) => void;
 }) {
   const [text, setText] = useState("");
+  const [profile, setProfile] = useState<ShapeProfile | "auto">("auto");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
@@ -18,10 +20,13 @@ export function ShapeForm({
     onError("");
 
     try {
+      const body: Record<string, string> = { text };
+      if (profile !== "auto") body.profile = profile;
+
       const res = await fetch("/api/shape", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -48,9 +53,20 @@ export function ShapeForm({
         className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-4 text-sm font-mono text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 resize-y"
       />
       <div className="flex items-center justify-between mt-3">
-        <span className="text-xs text-neutral-600">
-          {text.length.toLocaleString()} chars
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-neutral-600">
+            {text.length.toLocaleString()} chars
+          </span>
+          <select
+            value={profile}
+            onChange={(e) => setProfile(e.target.value as ShapeProfile | "auto")}
+            className="text-xs bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-neutral-400 focus:outline-none focus:border-neutral-600"
+          >
+            <option value="auto">auto-detect</option>
+            <option value="narrative_segment_v0">narrative</option>
+            <option value="concept_blob_v0">concept</option>
+          </select>
+        </div>
         <button
           onClick={handleSubmit}
           disabled={loading || !text.trim()}

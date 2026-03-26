@@ -1,147 +1,129 @@
 "use client";
 
 import { useState } from "react";
-import type { ShapeResult } from "@/lib/types";
+import type { ShapeResult, NarrativeSegment, ConceptBlob } from "@/lib/types";
 import { CastView } from "./cast-view";
 import { CheckView } from "./check-view";
 
+function TagList({ label, items }: { label: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">
+        {label}
+      </h3>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((item, i) => (
+          <span key={i} className="text-xs bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded">
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BulletList({ label, items }: { label: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">
+        {label}
+      </h3>
+      <ul className="space-y-1">
+        {items.map((item, i) => (
+          <li key={i} className="text-sm text-neutral-400">&bull; {item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function NarrativeView({ output }: { output: NarrativeSegment }) {
+  return (
+    <div className="space-y-4">
+      <TagList label="Time Markers" items={output.time_markers} />
+      <BulletList label="Events" items={output.events} />
+      <TagList label="Actors" items={output.actors} />
+      <BulletList label="Decisions" items={output.decisions} />
+      <BulletList label="Changes" items={output.changes} />
+      <BulletList label="Felt Experience" items={output.felt_experience} />
+      <BulletList label="Open Questions" items={output.open_questions} />
+    </div>
+  );
+}
+
+function ConceptView({ output }: { output: ConceptBlob }) {
+  return (
+    <div className="space-y-4">
+      <BulletList label="Core Claims" items={output.core_claims} />
+      <BulletList label="Layer Models" items={output.layer_models} />
+      <BulletList label="Distinctions" items={output.distinctions} />
+      <BulletList label="Principles" items={output.principles} />
+      <BulletList label="Anti-Patterns" items={output.anti_patterns} />
+      <BulletList label="Design Questions" items={output.design_questions} />
+      <BulletList label="Next Moves" items={output.next_moves} />
+    </div>
+  );
+}
+
 export function ShapeResult({ result }: { result: ShapeResult }) {
   const [tab, setTab] = useState<"readable" | "json" | "card">("readable");
-
-  const { candidate, declared_loss, casts, check, signal } = result;
+  const { profile, output, casts, check } = result;
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-8 space-y-6">
-      {/* Signal badge */}
       <div className="flex items-center gap-3">
-        <span
-          className={`text-xs font-mono px-2 py-1 rounded ${
-            signal.level === "strong"
-              ? "bg-green-900/50 text-green-400"
-              : signal.level === "weak"
-              ? "bg-yellow-900/50 text-yellow-400"
-              : "bg-red-900/50 text-red-400"
-          }`}
-        >
-          {signal.level}
+        <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-800 text-neutral-400">
+          {profile === "narrative_segment_v0" ? "narrative" : "concept"}
         </span>
-        <span className="text-xs text-neutral-500">{signal.note}</span>
+        <span className={`text-xs font-mono px-2 py-1 rounded ${
+          output.signal_level === "strong" ? "bg-green-900/50 text-green-400" :
+          output.signal_level === "weak" ? "bg-yellow-900/50 text-yellow-400" :
+          "bg-red-900/50 text-red-400"
+        }`}>
+          {output.signal_level}
+        </span>
       </div>
 
-      {/* Title and intent */}
-      <div>
-        <h2 className="text-xl font-semibold text-neutral-100">
-          {candidate.title}
-        </h2>
-        <p className="text-sm text-neutral-400 mt-1">{candidate.intent}</p>
-      </div>
+      <h2 className="text-xl font-semibold text-neutral-100">{output.title}</h2>
 
-      {/* Summary */}
-      <p className="text-sm text-neutral-300 leading-relaxed">
-        {candidate.summary}
-      </p>
+      {profile === "narrative_segment_v0"
+        ? <NarrativeView output={output as NarrativeSegment} />
+        : <ConceptView output={output as ConceptBlob} />
+      }
 
-      {/* Structured fields */}
-      <div className="grid grid-cols-2 gap-4">
-        {candidate.themes.length > 0 && (
-          <div>
-            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">
-              Themes
-            </h3>
-            <div className="flex flex-wrap gap-1.5">
-              {candidate.themes.map((t, i) => (
-                <span
-                  key={i}
-                  className="text-xs bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {candidate.entities.length > 0 && (
-          <div>
-            <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">
-              Entities
-            </h3>
-            <div className="flex flex-wrap gap-1.5">
-              {candidate.entities.map((e, i) => (
-                <span
-                  key={i}
-                  className="text-xs bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded"
-                >
-                  {e}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {candidate.constraints.length > 0 && (
-        <div>
-          <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">
-            Constraints
-          </h3>
-          <ul className="space-y-1">
-            {candidate.constraints.map((c, i) => (
-              <li key={i} className="text-sm text-neutral-400">
-                &bull; {c}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {candidate.questions.length > 0 && (
-        <div>
-          <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">
-            Open Questions
-          </h3>
-          <ul className="space-y-1">
-            {candidate.questions.map((q, i) => (
-              <li key={i} className="text-sm text-neutral-400">
-                ? {q}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Declared loss */}
-      {declared_loss.length > 0 && (
+      {output.inference_notes.length > 0 && (
         <div className="border-t border-neutral-800 pt-4">
-          <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">
-            Declared Loss
-          </h3>
+          <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">Inference Notes</h3>
           <ul className="space-y-1">
-            {declared_loss.map((l, i) => (
-              <li key={i} className="text-sm text-neutral-500 italic">
-                {l}
-              </li>
+            {output.inference_notes.map((n, i) => (
+              <li key={i} className="text-sm text-yellow-400/70 italic">{n}</li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* Check */}
+      {output.declared_loss.length > 0 && (
+        <div className="border-t border-neutral-800 pt-4">
+          <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-2">Declared Loss</h3>
+          <ul className="space-y-1">
+            {output.declared_loss.map((l, i) => (
+              <li key={i} className="text-sm text-neutral-500 italic">{l}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <CheckView check={check} />
 
-      {/* Tabs: readable / json / card */}
       <div className="border-t border-neutral-800 pt-4">
         <div className="flex gap-4 mb-3">
           {(["readable", "json", "card"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
+            <button key={t} onClick={() => setTab(t)}
               className={`text-xs font-mono uppercase tracking-wide pb-1 border-b-2 transition-colors ${
-                tab === t
-                  ? "border-neutral-400 text-neutral-200"
-                  : "border-transparent text-neutral-600 hover:text-neutral-400"
-              }`}
-            >
+                tab === t ? "border-neutral-400 text-neutral-200" : "border-transparent text-neutral-600 hover:text-neutral-400"
+              }`}>
               {t === "readable" ? "Cast" : t === "json" ? "JSON" : "Sieve Card"}
             </button>
           ))}

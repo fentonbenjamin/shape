@@ -1,13 +1,17 @@
 import { buildSystemPrompt } from "./prompt";
 import { runShapePrompt } from "./model";
-import { shapeResponseSchema } from "./output-schema";
+import { validateOutput } from "./output-schema";
+import { detectProfile } from "./detect-profile";
 import { castToMarkdown, castToHostJson } from "./cast";
 import { runCheck } from "./check";
-import type { ShapeResult } from "./types";
+import type { ShapeProfile, ShapeResult } from "./types";
 
 const MAX_INPUT_LENGTH = 50_000;
 
-export async function shape(rawText: string): Promise<ShapeResult> {
+export async function shape(
+  rawText: string,
+  profileOverride?: ShapeProfile
+): Promise<ShapeResult> {
   if (!rawText.trim()) {
     throw new Error("Empty input");
   }
@@ -16,7 +20,8 @@ export async function shape(rawText: string): Promise<ShapeResult> {
     throw new Error(`Input too large (${rawText.length} chars, max ${MAX_INPUT_LENGTH})`);
   }
 
-  const systemPrompt = buildSystemPrompt();
+  const profile = profileOverride ?? detectProfile(rawText);
+  const systemPrompt = buildSystemPrompt(profile);
   const raw = await runShapePrompt({ systemPrompt, userText: rawText });
 
   let parsed: unknown;
@@ -26,22 +31,19 @@ export async function shape(rawText: string): Promise<ShapeResult> {
     throw new Error("Model returned invalid JSON");
   }
 
-  const validated = shapeResponseSchema.parse(parsed);
+  const output = validateOutput(profile, parsed);
 
-  const { candidate, declared_loss, signal } = validated;
-
-  const review_markdown = castToMarkdown(candidate, declared_loss);
-  const host_json_view = castToHostJson(candidate, declared_loss);
-  const check = runCheck(candidate, declared_loss);
+  const review_markdown = castToMarkdown(profile, output);
+  const host_json_view = castToHostJson(profile, output);
+  const check = runCheck(profile, output);
 
   return {
-    candidate,
-    declared_loss,
+    profile,
+    output,
     casts: {
       review_markdown,
       host_json_view,
     },
     check,
-    signal,
   };
 }

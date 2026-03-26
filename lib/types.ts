@@ -1,35 +1,23 @@
-export interface ShapeCandidate {
-  title: string;
-  intent: string;
-  summary: string;
-  themes: string[];
-  constraints: string[];
-  entities: string[];
-  questions: string[];
-  source_refs: string[];
-}
+import type { ShapeProfile, NarrativeSegment, ConceptBlob } from "./output-schema";
+
+export type { ShapeProfile, NarrativeSegment, ConceptBlob };
 
 export interface ShapeCheck {
-  preserved_title: boolean;
-  preserved_intent: boolean;
-  preserved_constraints: boolean;
-  preserved_lineage: boolean;
-  declared_loss_visible: boolean;
+  structure_valid: boolean;
+  declared_loss_present: boolean;
+  signal_level_present: boolean;
+  explicit_vs_inferred_present: boolean;
+  required_profile_fields_present: boolean;
+  profile_specific: Record<string, boolean>;
   overall_result: "pass" | "fail";
 }
 
-export interface ShapeSignal {
-  level: "strong" | "weak" | "insufficient";
-  note: string;
-}
-
 export interface ShapeResult {
-  candidate: ShapeCandidate;
-  declared_loss: string[];
+  profile: ShapeProfile;
+  output: NarrativeSegment | ConceptBlob;
   casts: {
     review_markdown: string;
     host_json_view: object;
   };
   check: ShapeCheck;
-  signal: ShapeSignal;
 }

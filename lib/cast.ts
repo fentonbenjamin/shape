@@ -1,49 +1,52 @@
-import type { ShapeCandidate } from "./types";
+import type { ShapeProfile, NarrativeSegment, ConceptBlob } from "./types";
+
+function renderArray(label: string, items: string[]): string {
+  if (items.length === 0) return "";
+  return `\n## ${label}\n${items.map((i) => `- ${i}`).join("\n")}`;
+}
 
 export function castToMarkdown(
-  candidate: ShapeCandidate,
-  declaredLoss: string[]
+  profile: ShapeProfile,
+  output: NarrativeSegment | ConceptBlob
 ): string {
   const sections: string[] = [];
+  sections.push(`# ${output.title}`);
 
-  sections.push(`# ${candidate.title}`);
-  sections.push(`\n**Intent:** ${candidate.intent}`);
-  sections.push(`\n${candidate.summary}`);
-
-  if (candidate.themes.length > 0) {
-    sections.push(`\n## Themes\n${candidate.themes.map((t) => `- ${t}`).join("\n")}`);
+  if (profile === "narrative_segment_v0") {
+    const n = output as NarrativeSegment;
+    sections.push(renderArray("Time Markers", n.time_markers));
+    sections.push(renderArray("Events", n.events));
+    sections.push(renderArray("Actors", n.actors));
+    sections.push(renderArray("Decisions", n.decisions));
+    sections.push(renderArray("Changes", n.changes));
+    sections.push(renderArray("Felt Experience", n.felt_experience));
+    sections.push(renderArray("Open Questions", n.open_questions));
+  } else {
+    const c = output as ConceptBlob;
+    sections.push(renderArray("Core Claims", c.core_claims));
+    sections.push(renderArray("Layer Models", c.layer_models));
+    sections.push(renderArray("Distinctions", c.distinctions));
+    sections.push(renderArray("Principles", c.principles));
+    sections.push(renderArray("Anti-Patterns", c.anti_patterns));
+    sections.push(renderArray("Design Questions", c.design_questions));
+    sections.push(renderArray("Next Moves", c.next_moves));
   }
 
-  if (candidate.constraints.length > 0) {
-    sections.push(`\n## Constraints\n${candidate.constraints.map((c) => `- ${c}`).join("\n")}`);
-  }
+  sections.push(renderArray("Declared Loss", output.declared_loss));
+  sections.push(renderArray("Inference Notes", output.inference_notes));
 
-  if (candidate.entities.length > 0) {
-    sections.push(`\n## Entities\n${candidate.entities.map((e) => `- ${e}`).join("\n")}`);
-  }
+  sections.push(`\n---\n**Signal:** ${output.signal_level}`);
 
-  if (candidate.questions.length > 0) {
-    sections.push(`\n## Open Questions\n${candidate.questions.map((q) => `- ${q}`).join("\n")}`);
-  }
-
-  if (candidate.source_refs.length > 0) {
-    sections.push(`\n## Sources\n${candidate.source_refs.map((r) => `- ${r}`).join("\n")}`);
-  }
-
-  if (declaredLoss.length > 0) {
-    sections.push(`\n## Declared Loss\n${declaredLoss.map((l) => `- ${l}`).join("\n")}`);
-  }
-
-  return sections.join("\n");
+  return sections.filter(Boolean).join("\n");
 }
 
 export function castToHostJson(
-  candidate: ShapeCandidate,
-  declaredLoss: string[]
+  profile: ShapeProfile,
+  output: NarrativeSegment | ConceptBlob
 ): object {
   return {
-    ...candidate,
-    declared_loss: declaredLoss,
+    profile,
+    ...output,
     cast_type: "host_json_view",
     cast_version: "1.0.0",
   };
