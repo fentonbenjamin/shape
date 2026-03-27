@@ -106,6 +106,7 @@ export function ShapeForm({
             <option value="openai">GPT-4.1</option>
             <option value="anthropic">Claude Sonnet 4.6</option>
             <option value="gemini">Gemini 2.5 Flash</option>
+            <option value="local">Local (no LLM)</option>
           </select>
           {loading && (
             <span className="text-xs text-neutral-600 tabular-nums">
