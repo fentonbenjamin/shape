@@ -69,7 +69,8 @@ function ConceptView({ output }: { output: ConceptBlob }) {
 
 export function ShapeResult({ result }: { result: ShapeResult }) {
   const [tab, setTab] = useState<"readable" | "json" | "card">("readable");
-  const { profile, output, support, casts, check } = result;
+  const [showFull, setShowFull] = useState(false);
+  const { profile, spine, output, support, casts, check } = result;
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-8 space-y-6">
@@ -84,14 +85,39 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
         }`}>
           {output.signal_level}
         </span>
+        {check.compression_holds && (
+          <span className="text-xs font-mono px-2 py-1 rounded bg-blue-900/30 text-blue-400">
+            compressed
+          </span>
+        )}
       </div>
 
       <h2 className="text-xl font-semibold text-neutral-100">{output.title}</h2>
 
-      {profile === "narrative_segment_v0"
-        ? <NarrativeView output={output as NarrativeSegment} />
-        : <ConceptView output={output as ConceptBlob} />
-      }
+      {/* Spine — the primary value surface */}
+      {spine.length > 0 && (
+        <div className="space-y-2 py-2">
+          {spine.map((s, i) => (
+            <p key={i} className="text-sm text-neutral-200 leading-relaxed border-l-2 border-neutral-700 pl-3">
+              {s}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {/* Expandable full structure */}
+      <button
+        onClick={() => setShowFull(!showFull)}
+        className="text-xs font-mono text-neutral-600 hover:text-neutral-400 transition-colors"
+      >
+        {showFull ? "▾ hide full structure" : "▸ show full structure"}
+      </button>
+
+      {showFull && (
+        profile === "narrative_segment_v0"
+          ? <NarrativeView output={output as NarrativeSegment} />
+          : <ConceptView output={output as ConceptBlob} />
+      )}
 
       {/* Support — evidence for each field */}
       {Object.keys(support).length > 0 && (

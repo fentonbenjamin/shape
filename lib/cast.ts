@@ -7,10 +7,19 @@ function renderArray(label: string, items: string[]): string {
 
 export function castToMarkdown(
   profile: ShapeProfile,
+  spine: string[],
   output: NarrativeSegment | ConceptBlob
 ): string {
   const sections: string[] = [];
   sections.push(`# ${output.title}`);
+
+  // Spine first — the primary value
+  if (spine.length > 0) {
+    sections.push(`\n${spine.map((s) => `> ${s}`).join("\n>\n")}`);
+  }
+
+  // Full structure as appendix
+  sections.push(`\n---`);
 
   if (profile === "narrative_segment_v0") {
     const n = output as NarrativeSegment;
@@ -34,7 +43,6 @@ export function castToMarkdown(
 
   sections.push(renderArray("Declared Loss", output.declared_loss));
   sections.push(renderArray("Inference Notes", output.inference_notes));
-
   sections.push(`\n---\n**Signal:** ${output.signal_level}`);
 
   return sections.filter(Boolean).join("\n");
@@ -42,14 +50,16 @@ export function castToMarkdown(
 
 export function castToHostJson(
   profile: ShapeProfile,
+  spine: string[],
   output: NarrativeSegment | ConceptBlob,
   engine: ShapeEngine = "openai"
 ): object {
   return {
     engine,
     profile,
+    spine,
     ...output,
     cast_type: "host_json_view",
-    cast_version: "1.0.0",
+    cast_version: "2.0.0",
   };
 }

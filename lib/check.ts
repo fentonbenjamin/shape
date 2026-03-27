@@ -23,7 +23,6 @@ function checkSupportCoverage(
   for (const key of fieldKeys) {
     const values = output[key];
     if (!Array.isArray(values) || values.length === 0) continue;
-
     const entries = support[key];
     if (!entries || entries.length === 0) {
       unsupported.push(key);
@@ -33,16 +32,34 @@ function checkSupportCoverage(
   return { covered: unsupported.length === 0, unsupported_fields: unsupported };
 }
 
+function measureCompression(
+  spine: string[],
+  output: NarrativeSegment | ConceptBlob,
+  rawText: string
+): boolean {
+  // Primary cast = spine + title + declared_loss
+  const primaryChars =
+    spine.join(" ").length +
+    output.title.length +
+    output.declared_loss.join(" ").length;
+
+  return primaryChars < rawText.length;
+}
+
 export function runCheck(
   profile: ShapeProfile,
   output: NarrativeSegment | ConceptBlob,
-  support: SupportMap
+  support: SupportMap,
+  spine: string[],
+  rawText: string
 ): ShapeCheck {
   const structure_valid = output.title.length > 0;
   const declared_loss_present = output.declared_loss.length > 0;
   const signal_level_present = ["strong", "weak", "insufficient"].includes(output.signal_level);
   const explicit_vs_inferred_present = output.inference_notes.length > 0;
   const support_present = Object.keys(support).length > 0;
+  const spine_present = spine.length >= 1;
+  const compression_holds = measureCompression(spine, output, rawText);
 
   const coverage = checkSupportCoverage(
     profile,
@@ -75,10 +92,6 @@ export function runCheck(
     required_profile_fields_present = has_claims_or_distinctions;
   }
 
-  if (!coverage.covered) {
-    profile_specific.unsupported_fields = false;
-  }
-
   const overall_result =
     structure_valid &&
     declared_loss_present &&
@@ -86,6 +99,7 @@ export function runCheck(
     explicit_vs_inferred_present &&
     required_profile_fields_present &&
     support_present &&
+    spine_present &&
     coverage.covered
       ? "pass"
       : "fail";
@@ -97,6 +111,8 @@ export function runCheck(
     explicit_vs_inferred_present,
     required_profile_fields_present,
     support_present,
+    spine_present,
+    compression_holds,
     profile_specific,
     overall_result,
   };

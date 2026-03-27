@@ -41,8 +41,9 @@ export const conceptBlobSchema = z.object({
   ...crossProfileFields,
 });
 
-// Full model response (output + support)
+// Full model response: spine + result + support
 export const shapeModelResponseSchema = z.object({
+  spine: z.array(z.string()).min(1).max(7),
   result: z.union([narrativeSegmentSchema, conceptBlobSchema]),
   support: supportMapSchema,
 });
@@ -54,7 +55,6 @@ export type ShapeOutput = NarrativeSegment | ConceptBlob;
 
 export function validateModelResponse(profile: ShapeProfile, data: unknown) {
   const parsed = shapeModelResponseSchema.parse(data);
-  // Re-validate result against the specific profile schema
   if (profile === "narrative_segment_v0") {
     narrativeSegmentSchema.parse(parsed.result);
   } else {

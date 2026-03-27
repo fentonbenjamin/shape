@@ -9,6 +9,8 @@ export function CheckView({ check }: { check: ShapeCheck }) {
     { label: "Signal level", ok: check.signal_level_present },
     { label: "Explicit vs inferred", ok: check.explicit_vs_inferred_present },
     { label: "Profile fields", ok: check.required_profile_fields_present },
+    { label: "Spine", ok: check.spine_present },
+    { label: "Compressed", ok: check.compression_holds },
   ];
 
   const profileChecks = Object.entries(check.profile_specific).map(

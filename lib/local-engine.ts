@@ -286,16 +286,39 @@ function buildLocalSupport(
   return support;
 }
 
+function buildSpine(
+  profile: ShapeProfile,
+  result: NarrativeSegment | ConceptBlob
+): string[] {
+  // Pick the 3-5 most load-bearing entries across all fields
+  const candidates: string[] = [];
+
+  if (profile === "narrative_segment_v0") {
+    const n = result as NarrativeSegment;
+    candidates.push(...n.changes.slice(0, 2));
+    candidates.push(...n.events.slice(0, 2));
+    candidates.push(...n.decisions.slice(0, 1));
+  } else {
+    const c = result as ConceptBlob;
+    candidates.push(...c.distinctions.slice(0, 2));
+    candidates.push(...c.principles.slice(0, 2));
+    candidates.push(...c.core_claims.slice(0, 1));
+  }
+
+  return candidates.slice(0, 5);
+}
+
 export async function runLocalShape(
   profile: ShapeProfile,
   userText: string
-): Promise<{ result: NarrativeSegment | ConceptBlob; support: Record<string, unknown[]> }> {
+): Promise<{ spine: string[]; result: NarrativeSegment | ConceptBlob; support: Record<string, unknown[]> }> {
   const result = profile === "narrative_segment_v0"
     ? shapeNarrative(userText)
     : shapeConcept(userText);
 
   const sentences = splitSentences(normalizeWhitespace(userText));
   const support = buildLocalSupport(profile, result, sentences);
+  const spine = buildSpine(profile, result);
 
-  return { result, support };
+  return { spine, result, support };
 }

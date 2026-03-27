@@ -17,6 +17,8 @@ export interface ShapeCheck {
   explicit_vs_inferred_present: boolean;
   required_profile_fields_present: boolean;
   support_present: boolean;
+  spine_present: boolean;
+  compression_holds: boolean;
   profile_specific: Record<string, boolean>;
   overall_result: "pass" | "fail";
 }
@@ -24,6 +26,7 @@ export interface ShapeCheck {
 export interface ShapeResult {
   engine: ShapeEngine;
   profile: ShapeProfile;
+  spine: string[];
   output: NarrativeSegment | ConceptBlob;
   support: SupportMap;
   casts: {
