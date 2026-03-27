@@ -1,7 +1,7 @@
 import type { ShapeProfile, NarrativeSegment, ConceptBlob } from "./output-schema";
 
 export type { ShapeProfile, NarrativeSegment, ConceptBlob };
-export type ShapeEngine = "openai" | "local";
+export type ShapeEngine = "openai" | "anthropic" | "gemini" | "local";
 
 export interface SupportEntry {
   kind: "explicit" | "inferred";

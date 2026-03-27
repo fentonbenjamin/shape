@@ -123,7 +123,7 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
           {output.signal_level}
         </span>
         <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-800 text-neutral-500">
-          {engine === "local" ? "local" : "gpt-4.1"}
+          {engine === "local" ? "local" : engine === "anthropic" ? "claude" : engine === "gemini" ? "gemini" : "gpt-4.1"}
         </span>
         {check.compression_holds && (
           <span className="text-xs font-mono px-2 py-1 rounded bg-blue-900/30 text-blue-400">

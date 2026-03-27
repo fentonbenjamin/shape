@@ -3,7 +3,7 @@ import { shape } from "@/lib/shape";
 import type { ShapeEngine, ShapeProfile } from "@/lib/types";
 
 const VALID_PROFILES = ["narrative_segment_v0", "concept_blob_v0"];
-const VALID_ENGINES = ["openai", "local"];
+const VALID_ENGINES = ["openai", "anthropic", "gemini", "local"];
 
 export async function POST(request: NextRequest) {
   try {

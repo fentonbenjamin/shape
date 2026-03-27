@@ -1,6 +1,6 @@
 import { buildSystemPrompt } from "./prompt";
 import { runLocalShape } from "./local-engine";
-import { runOpenAIShapePrompt } from "./model";
+import { runOpenAIShapePrompt, runAnthropicShapePrompt, runGeminiShapePrompt } from "./model";
 import type { ShapeEngine, ShapeProfile } from "./types";
 
 export async function runShapeEngine({
@@ -17,7 +17,15 @@ export async function runShapeEngine({
   }
 
   const systemPrompt = buildSystemPrompt(profile);
-  const raw = await runOpenAIShapePrompt({ systemPrompt, userText });
+  let raw: string;
+
+  if (engine === "anthropic") {
+    raw = await runAnthropicShapePrompt({ systemPrompt, userText });
+  } else if (engine === "gemini") {
+    raw = await runGeminiShapePrompt({ systemPrompt, userText });
+  } else {
+    raw = await runOpenAIShapePrompt({ systemPrompt, userText });
+  }
 
   try {
     return JSON.parse(raw);
