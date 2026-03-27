@@ -251,13 +251,51 @@ function shapeConcept(text: string): ConceptBlob {
   };
 }
 
+function buildLocalSupport(
+  profile: ShapeProfile,
+  result: NarrativeSegment | ConceptBlob,
+  sentences: string[]
+): Record<string, Array<{ kind: "explicit" | "inferred"; evidence: string[] }>> {
+  const support: Record<string, Array<{ kind: "explicit" | "inferred"; evidence: string[] }>> = {};
+
+  const fieldKeys = profile === "narrative_segment_v0"
+    ? ["events", "actors", "decisions", "changes", "felt_experience", "time_markers"]
+    : ["core_claims", "distinctions", "principles", "anti_patterns", "design_questions", "next_moves"];
+
+  for (const key of fieldKeys) {
+    const values = (result as Record<string, unknown>)[key];
+    if (!Array.isArray(values) || values.length === 0) continue;
+
+    const entries: Array<{ kind: "explicit" | "inferred"; evidence: string[] }> = [];
+    for (const val of values as string[]) {
+      // Find the source sentence(s) that contain keywords from this value
+      const keywords = val.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
+      const matched = sentences.filter((s) =>
+        keywords.some((kw) => s.toLowerCase().includes(kw))
+      ).slice(0, 2);
+
+      if (matched.length > 0) {
+        entries.push({ kind: "explicit", evidence: matched });
+      } else {
+        entries.push({ kind: "inferred", evidence: [val] });
+      }
+    }
+    support[key] = entries;
+  }
+
+  return support;
+}
+
 export async function runLocalShape(
   profile: ShapeProfile,
   userText: string
-): Promise<NarrativeSegment | ConceptBlob> {
-  if (profile === "narrative_segment_v0") {
-    return shapeNarrative(userText);
-  }
+): Promise<{ result: NarrativeSegment | ConceptBlob; support: Record<string, unknown[]> }> {
+  const result = profile === "narrative_segment_v0"
+    ? shapeNarrative(userText)
+    : shapeConcept(userText);
 
-  return shapeConcept(userText);
+  const sentences = splitSentences(normalizeWhitespace(userText));
+  const support = buildLocalSupport(profile, result, sentences);
+
+  return { result, support };
 }

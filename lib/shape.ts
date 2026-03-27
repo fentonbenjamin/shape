@@ -1,9 +1,9 @@
 import { runShapeEngine } from "./engine";
-import { validateOutput } from "./output-schema";
+import { validateModelResponse, validateOutput } from "./output-schema";
 import { detectProfile } from "./detect-profile";
 import { castToMarkdown, castToHostJson } from "./cast";
 import { runCheck } from "./check";
-import type { ShapeEngine, ShapeProfile, ShapeResult } from "./types";
+import type { ShapeEngine, ShapeProfile, ShapeResult, SupportMap } from "./types";
 
 const MAX_INPUT_LENGTH = 50_000;
 
@@ -22,16 +22,21 @@ export async function shape(
 
   const profile = profileOverride ?? detectProfile(rawText);
   const parsed = await runShapeEngine({ engine, profile, userText: rawText });
-  const output = validateOutput(profile, parsed);
+
+  // Both engines now return {result, support}
+  const validated = validateModelResponse(profile, parsed);
+  const output = validated.result;
+  const support = validated.support as SupportMap;
 
   const review_markdown = castToMarkdown(profile, output);
   const host_json_view = castToHostJson(profile, output, engine);
-  const check = runCheck(profile, output);
+  const check = runCheck(profile, output, support);
 
   return {
     engine,
     profile,
     output,
+    support,
     casts: {
       review_markdown,
       host_json_view,

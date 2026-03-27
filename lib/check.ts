@@ -1,13 +1,15 @@
-import type { ShapeProfile, ShapeCheck, NarrativeSegment, ConceptBlob } from "./types";
+import type { ShapeProfile, ShapeCheck, NarrativeSegment, ConceptBlob, SupportMap } from "./types";
 
 export function runCheck(
   profile: ShapeProfile,
-  output: NarrativeSegment | ConceptBlob
+  output: NarrativeSegment | ConceptBlob,
+  support: SupportMap
 ): ShapeCheck {
   const structure_valid = output.title.length > 0;
   const declared_loss_present = output.declared_loss.length > 0;
   const signal_level_present = ["strong", "weak", "insufficient"].includes(output.signal_level);
   const explicit_vs_inferred_present = output.inference_notes.length > 0;
+  const support_present = Object.keys(support).length > 0;
 
   let profile_specific: Record<string, boolean> = {};
   let required_profile_fields_present = false;
@@ -31,7 +33,8 @@ export function runCheck(
     declared_loss_present &&
     signal_level_present &&
     explicit_vs_inferred_present &&
-    required_profile_fields_present
+    required_profile_fields_present &&
+    support_present
       ? "pass"
       : "fail";
 
@@ -41,6 +44,7 @@ export function runCheck(
     signal_level_present,
     explicit_vs_inferred_present,
     required_profile_fields_present,
+    support_present,
     profile_specific,
     overall_result,
   };

@@ -18,8 +18,16 @@ DO:
 - preserve open questions
 - declare what you dropped and why
 - return signal_level "insufficient" if the text doesn't have enough structure to shape
+- for EVERY extracted field, provide evidence in the "support" block showing WHERE in the source text the extraction came from and WHETHER it was explicit or inferred
 
-Respond with ONLY a JSON object. No markdown. No explanation.`;
+Respond with ONLY a JSON object. No markdown. No explanation.
+
+CRITICAL: Your response must have two top-level keys: "result" and "support".
+- "result" contains the shaped output
+- "support" maps field names to arrays of evidence entries
+- Each evidence entry has "kind" ("explicit" or "inferred") and "evidence" (array of source text snippets)
+
+The support block is what keeps the sieve honest. Every non-trivial extraction should have support.`;
 
 const NARRATIVE_PROMPT = `${CORE_RULES}
 
@@ -35,21 +43,27 @@ Focus on:
 - open questions (things left unresolved or ambiguous in the text)
 
 For inference_notes: flag anything you inferred that wasn't directly stated.
-For declared_loss: list anything meaningful you dropped (tangents, context you couldn't preserve, ambiguities you couldn't resolve).
+For declared_loss: list anything meaningful you dropped.
 
 Output this exact JSON shape:
 {
-  "title": "short descriptive title for this segment",
-  "time_markers": ["1974", "age 3", "after the divorce"],
-  "events": ["concrete thing that happened"],
-  "actors": ["person or role mentioned"],
-  "decisions": ["choice made or implied"],
-  "changes": ["what shifted — REQUIRED"],
-  "felt_experience": ["emotional or sensory detail — light touch"],
-  "open_questions": ["unresolved or ambiguous elements"],
-  "declared_loss": ["what was dropped and why"],
-  "signal_level": "strong|weak|insufficient",
-  "inference_notes": ["what you inferred vs what was explicit"]
+  "result": {
+    "title": "short descriptive title for this segment",
+    "time_markers": ["1974", "age 3", "after the divorce"],
+    "events": ["concrete thing that happened"],
+    "actors": ["person or role mentioned"],
+    "decisions": ["choice made or implied"],
+    "changes": ["what shifted — REQUIRED"],
+    "felt_experience": ["emotional or sensory detail — light touch"],
+    "open_questions": ["unresolved or ambiguous elements"],
+    "declared_loss": ["what was dropped and why"],
+    "signal_level": "strong|weak|insufficient",
+    "inference_notes": ["what you inferred vs what was explicit"]
+  },
+  "support": {
+    "events": [{"kind": "explicit", "evidence": ["exact quote or close paraphrase from source"]}],
+    "changes": [{"kind": "inferred", "evidence": ["source snippets that support the inference"]}]
+  }
 }`;
 
 const CONCEPT_PROMPT = `${CORE_RULES}
@@ -70,17 +84,23 @@ For declared_loss: list anything meaningful you dropped.
 
 Output this exact JSON shape:
 {
-  "title": "short descriptive title",
-  "core_claims": ["assertion the text makes"],
-  "layer_models": ["described layers or stacks"],
-  "distinctions": ["contrasts or separations drawn"],
-  "principles": ["rules or heuristics"],
-  "anti_patterns": ["warnings or things to avoid"],
-  "design_questions": ["open design/architecture questions"],
-  "next_moves": ["proposed or implied actions"],
-  "declared_loss": ["what was dropped and why"],
-  "signal_level": "strong|weak|insufficient",
-  "inference_notes": ["what you inferred vs what was explicit"]
+  "result": {
+    "title": "short descriptive title",
+    "core_claims": ["assertion the text makes"],
+    "layer_models": ["described layers or stacks"],
+    "distinctions": ["contrasts or separations drawn"],
+    "principles": ["rules or heuristics"],
+    "anti_patterns": ["warnings or things to avoid"],
+    "design_questions": ["open design/architecture questions"],
+    "next_moves": ["proposed or implied actions"],
+    "declared_loss": ["what was dropped and why"],
+    "signal_level": "strong|weak|insufficient",
+    "inference_notes": ["what you inferred vs what was explicit"]
+  },
+  "support": {
+    "core_claims": [{"kind": "explicit", "evidence": ["exact quote or close paraphrase"]}],
+    "principles": [{"kind": "inferred", "evidence": ["source snippets that support the inference"]}]
+  }
 }`;
 
 export function buildSystemPrompt(profile: ShapeProfile): string {

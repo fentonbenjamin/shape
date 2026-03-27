@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ShapeResult, NarrativeSegment, ConceptBlob } from "@/lib/types";
+import type { ShapeResult, NarrativeSegment, ConceptBlob, SupportMap } from "@/lib/types";
 import { CastView } from "./cast-view";
 import { CheckView } from "./check-view";
 
@@ -69,7 +69,7 @@ function ConceptView({ output }: { output: ConceptBlob }) {
 
 export function ShapeResult({ result }: { result: ShapeResult }) {
   const [tab, setTab] = useState<"readable" | "json" | "card">("readable");
-  const { profile, output, casts, check } = result;
+  const { profile, output, support, casts, check } = result;
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-8 space-y-6">
@@ -92,6 +92,38 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
         ? <NarrativeView output={output as NarrativeSegment} />
         : <ConceptView output={output as ConceptBlob} />
       }
+
+      {/* Support — evidence for each field */}
+      {Object.keys(support).length > 0 && (
+        <div className="border-t border-neutral-800 pt-4">
+          <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-wide mb-3">
+            Evidence
+          </h3>
+          <div className="space-y-3">
+            {Object.entries(support).map(([field, entries]) => (
+              <div key={field}>
+                <span className="text-xs font-mono text-neutral-400">{field}</span>
+                <div className="ml-3 mt-1 space-y-1">
+                  {(entries as Array<{ kind: string; evidence: string[] }>).map((entry, i) => (
+                    <div key={i} className="flex gap-2 items-start">
+                      <span className={`text-xs font-mono mt-0.5 ${
+                        entry.kind === "explicit" ? "text-green-500" : "text-yellow-500"
+                      }`}>
+                        {entry.kind === "explicit" ? "E" : "I"}
+                      </span>
+                      <div className="text-xs text-neutral-500">
+                        {entry.evidence.map((e, j) => (
+                          <span key={j} className="block">&ldquo;{e}&rdquo;</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {output.inference_notes.length > 0 && (
         <div className="border-t border-neutral-800 pt-4">

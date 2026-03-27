@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+// Support entry: evidence for each extracted field
+const supportEntrySchema = z.object({
+  kind: z.enum(["explicit", "inferred"]),
+  evidence: z.array(z.string()),
+});
+
+const supportMapSchema = z.record(z.string(), z.array(supportEntrySchema));
+
 // Cross-profile required fields
 const crossProfileFields = {
   declared_loss: z.array(z.string()),
@@ -33,10 +41,27 @@ export const conceptBlobSchema = z.object({
   ...crossProfileFields,
 });
 
+// Full model response (output + support)
+export const shapeModelResponseSchema = z.object({
+  result: z.union([narrativeSegmentSchema, conceptBlobSchema]),
+  support: supportMapSchema,
+});
+
 export type NarrativeSegment = z.infer<typeof narrativeSegmentSchema>;
 export type ConceptBlob = z.infer<typeof conceptBlobSchema>;
 export type ShapeProfile = "narrative_segment_v0" | "concept_blob_v0";
 export type ShapeOutput = NarrativeSegment | ConceptBlob;
+
+export function validateModelResponse(profile: ShapeProfile, data: unknown) {
+  const parsed = shapeModelResponseSchema.parse(data);
+  // Re-validate result against the specific profile schema
+  if (profile === "narrative_segment_v0") {
+    narrativeSegmentSchema.parse(parsed.result);
+  } else {
+    conceptBlobSchema.parse(parsed.result);
+  }
+  return parsed;
+}
 
 export function validateOutput(profile: ShapeProfile, data: unknown) {
   if (profile === "narrative_segment_v0") {
