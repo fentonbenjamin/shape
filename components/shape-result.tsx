@@ -5,6 +5,20 @@ import type { ShapeResult, NarrativeSegment, ConceptBlob, SupportMap } from "@/l
 import { CastView } from "./cast-view";
 import { CheckView } from "./check-view";
 
+function downloadFile(content: string, filename: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text);
+}
+
 function TagList({ label, items }: { label: string; items: string[] }) {
   if (items.length === 0) return null;
   return (
@@ -187,6 +201,40 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
           ))}
         </div>
         <CastView tab={tab} casts={casts} />
+      </div>
+
+      {/* Export bar */}
+      <div className="border-t border-neutral-800 pt-4 flex flex-wrap gap-2">
+        <button
+          onClick={() => copyToClipboard(spine.join("\n"))}
+          className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+        >
+          Copy spine
+        </button>
+        <button
+          onClick={() => copyToClipboard(casts.review_markdown)}
+          className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+        >
+          Copy markdown
+        </button>
+        <button
+          onClick={() => copyToClipboard(JSON.stringify(result, null, 2))}
+          className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+        >
+          Copy JSON
+        </button>
+        <button
+          onClick={() => downloadFile(JSON.stringify(result, null, 2), `shape-${output.title.toLowerCase().replace(/\s+/g, "-").slice(0, 30)}.json`, "application/json")}
+          className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+        >
+          Download JSON
+        </button>
+        <button
+          onClick={() => downloadFile(casts.review_markdown, `shape-${output.title.toLowerCase().replace(/\s+/g, "-").slice(0, 30)}.md`, "text/markdown")}
+          className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+        >
+          Download markdown
+        </button>
       </div>
     </div>
   );

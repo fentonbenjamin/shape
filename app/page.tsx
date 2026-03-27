@@ -8,9 +8,17 @@ import type { ShapeResult } from "@/lib/types";
 export default function Home() {
   const [result, setResult] = useState<ShapeResult | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 py-16">
+    <main className="min-h-screen flex flex-col items-center px-4 py-16 relative">
+      {/* Top progress bar */}
+      {loading && (
+        <div className="fixed top-0 left-0 right-0 h-0.5 z-50">
+          <div className="h-full bg-neutral-400 animate-pulse" style={{ width: "100%" }} />
+        </div>
+      )}
+
       <div className="w-full max-w-3xl text-center mb-12">
         <h1 className="text-4xl font-bold tracking-tight text-neutral-100">
           Shape
@@ -29,6 +37,7 @@ export default function Home() {
           setError(msg);
           setResult(null);
         }}
+        onLoading={setLoading}
       />
 
       {error && (
