@@ -87,7 +87,7 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
   const [visibleSpine, setVisibleSpine] = useState(0);
   const [titleVisible, setTitleVisible] = useState(false);
   const [badgesVisible, setBadgesVisible] = useState(false);
-  const { profile, spine, output, support, casts, check } = result;
+  const { profile, engine, spine, output, support, casts, check, fallback_reason } = result;
 
   // Staggered reveal: badges → title → spine lines one by one
   useEffect(() => {
@@ -122,12 +122,20 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
         }`}>
           {output.signal_level}
         </span>
+        <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-800 text-neutral-500">
+          {engine === "local" ? "local" : "gpt-4.1"}
+        </span>
         {check.compression_holds && (
           <span className="text-xs font-mono px-2 py-1 rounded bg-blue-900/30 text-blue-400">
             compressed
           </span>
         )}
       </div>
+      {fallback_reason && (
+        <p className="text-xs text-yellow-500/70 font-mono">
+          fell back to local engine — {fallback_reason}
+        </p>
+      )}
 
       <h2 className={`text-xl font-semibold text-neutral-100 transition-all duration-500 ${titleVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
         {output.title}

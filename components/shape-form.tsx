@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { ShapeProfile } from "@/lib/types";
+import type { ShapeProfile, ShapeEngine } from "@/lib/types";
 
 export function ShapeForm({
   onResult,
@@ -14,6 +14,7 @@ export function ShapeForm({
 }) {
   const [text, setText] = useState("");
   const [profile, setProfile] = useState<ShapeProfile | "auto">("auto");
+  const [engine, setEngine] = useState<ShapeEngine | "auto">("auto");
   const [loading, setLoading] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -40,6 +41,7 @@ export function ShapeForm({
     try {
       const body: Record<string, string> = { text };
       if (profile !== "auto") body.profile = profile;
+      if (engine !== "auto") body.engine = engine;
 
       const res = await fetch("/api/shape", {
         method: "POST",
@@ -94,6 +96,16 @@ export function ShapeForm({
             <option value="auto">auto-detect</option>
             <option value="narrative_segment_v0">narrative</option>
             <option value="concept_blob_v0">concept</option>
+          </select>
+          <select
+            value={engine}
+            onChange={(e) => setEngine(e.target.value as ShapeEngine | "auto")}
+            disabled={loading}
+            className="text-xs bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-neutral-400 focus:outline-none focus:border-neutral-600 disabled:opacity-50"
+          >
+            <option value="auto">gpt-4.1 → local fallback</option>
+            <option value="openai">gpt-4.1 only</option>
+            <option value="local">local (no LLM)</option>
           </select>
           {loading && (
             <span className="text-xs text-neutral-600 tabular-nums">

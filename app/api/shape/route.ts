@@ -28,7 +28,19 @@ export async function POST(request: NextRequest) {
         ? (engine as ShapeEngine)
         : "openai";
 
-    const result = await shape(text, profileOverride, engineOverride);
+    let result;
+    try {
+      result = await shape(text, profileOverride, engineOverride);
+    } catch (primaryErr) {
+      // If an LLM engine failed, fall back to local with a note
+      if (engineOverride !== "local") {
+        result = await shape(text, profileOverride, "local");
+        result.engine = "local" as ShapeEngine;
+        result.fallback_reason = primaryErr instanceof Error ? primaryErr.message : "LLM unavailable";
+      } else {
+        throw primaryErr;
+      }
+    }
     return NextResponse.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";

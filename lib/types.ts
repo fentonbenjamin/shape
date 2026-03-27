@@ -34,4 +34,5 @@ export interface ShapeResult {
     host_json_view: object;
   };
   check: ShapeCheck;
+  fallback_reason?: string;
 }
