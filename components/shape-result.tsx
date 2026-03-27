@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ShapeResult, NarrativeSegment, ConceptBlob, SupportMap } from "@/lib/types";
 import { CastView } from "./cast-view";
 import { CheckView } from "./check-view";
@@ -84,11 +84,34 @@ function ConceptView({ output }: { output: ConceptBlob }) {
 export function ShapeResult({ result }: { result: ShapeResult }) {
   const [tab, setTab] = useState<"readable" | "json" | "card">("readable");
   const [showFull, setShowFull] = useState(false);
+  const [visibleSpine, setVisibleSpine] = useState(0);
+  const [titleVisible, setTitleVisible] = useState(false);
+  const [badgesVisible, setBadgesVisible] = useState(false);
   const { profile, spine, output, support, casts, check } = result;
+
+  // Staggered reveal: badges → title → spine lines one by one
+  useEffect(() => {
+    setVisibleSpine(0);
+    setTitleVisible(false);
+    setBadgesVisible(false);
+
+    const t0 = setTimeout(() => setBadgesVisible(true), 100);
+    const t1 = setTimeout(() => setTitleVisible(true), 350);
+
+    const spineTimers = spine.map((_, i) =>
+      setTimeout(() => setVisibleSpine(i + 1), 600 + i * 400)
+    );
+
+    return () => {
+      clearTimeout(t0);
+      clearTimeout(t1);
+      spineTimers.forEach(clearTimeout);
+    };
+  }, [result, spine]);
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-8 space-y-6">
-      <div className="flex items-center gap-3">
+      <div className={`flex items-center gap-3 transition-all duration-300 ${badgesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
         <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-800 text-neutral-400">
           {profile === "narrative_segment_v0" ? "narrative" : "concept"}
         </span>
@@ -106,13 +129,20 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
         )}
       </div>
 
-      <h2 className="text-xl font-semibold text-neutral-100">{output.title}</h2>
+      <h2 className={`text-xl font-semibold text-neutral-100 transition-all duration-500 ${titleVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+        {output.title}
+      </h2>
 
-      {/* Spine — the primary value surface */}
+      {/* Spine — staggered reveal */}
       {spine.length > 0 && (
         <div className="space-y-2 py-2">
           {spine.map((s, i) => (
-            <p key={i} className="text-sm text-neutral-200 leading-relaxed border-l-2 border-neutral-700 pl-3">
+            <p
+              key={i}
+              className={`text-sm text-neutral-200 leading-relaxed border-l-2 border-neutral-700 pl-3 transition-all duration-500 ${
+                i < visibleSpine ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+              }`}
+            >
               {s}
             </p>
           ))}
