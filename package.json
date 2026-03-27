@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "shape:local": "./node_modules/.bin/tsc -p tsconfig.cli.json && node .shape-build/scripts/shape-local.js"
   },
   "keywords": [],
   "author": "",

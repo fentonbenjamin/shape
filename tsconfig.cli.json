@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".shape-build",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": false,
+    "sourceMap": false,
+    "incremental": false,
+    "plugins": []
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "lib/**/*.ts"
+  ]
+}

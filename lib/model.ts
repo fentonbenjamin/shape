@@ -21,3 +21,5 @@ export async function runShapePrompt({
 
   return response.choices[0]?.message?.content ?? "";
 }
+
+export { runShapePrompt as runOpenAIShapePrompt };

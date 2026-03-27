@@ -1,4 +1,4 @@
-import type { ShapeProfile, NarrativeSegment, ConceptBlob } from "./types";
+import type { ShapeEngine, ShapeProfile, NarrativeSegment, ConceptBlob } from "./types";
 
 function renderArray(label: string, items: string[]): string {
   if (items.length === 0) return "";
@@ -42,9 +42,11 @@ export function castToMarkdown(
 
 export function castToHostJson(
   profile: ShapeProfile,
-  output: NarrativeSegment | ConceptBlob
+  output: NarrativeSegment | ConceptBlob,
+  engine: ShapeEngine = "openai"
 ): object {
   return {
+    engine,
     profile,
     ...output,
     cast_type: "host_json_view",

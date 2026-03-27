@@ -1,6 +1,7 @@
 import type { ShapeProfile, NarrativeSegment, ConceptBlob } from "./output-schema";
 
 export type { ShapeProfile, NarrativeSegment, ConceptBlob };
+export type ShapeEngine = "openai" | "local";
 
 export interface ShapeCheck {
   structure_valid: boolean;
@@ -13,6 +14,7 @@ export interface ShapeCheck {
 }
 
 export interface ShapeResult {
+  engine: ShapeEngine;
   profile: ShapeProfile;
   output: NarrativeSegment | ConceptBlob;
   casts: {

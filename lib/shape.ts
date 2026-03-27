@@ -1,16 +1,16 @@
-import { buildSystemPrompt } from "./prompt";
-import { runShapePrompt } from "./model";
+import { runShapeEngine } from "./engine";
 import { validateOutput } from "./output-schema";
 import { detectProfile } from "./detect-profile";
 import { castToMarkdown, castToHostJson } from "./cast";
 import { runCheck } from "./check";
-import type { ShapeProfile, ShapeResult } from "./types";
+import type { ShapeEngine, ShapeProfile, ShapeResult } from "./types";
 
 const MAX_INPUT_LENGTH = 50_000;
 
 export async function shape(
   rawText: string,
-  profileOverride?: ShapeProfile
+  profileOverride?: ShapeProfile,
+  engine: ShapeEngine = "openai"
 ): Promise<ShapeResult> {
   if (!rawText.trim()) {
     throw new Error("Empty input");
@@ -21,23 +21,15 @@ export async function shape(
   }
 
   const profile = profileOverride ?? detectProfile(rawText);
-  const systemPrompt = buildSystemPrompt(profile);
-  const raw = await runShapePrompt({ systemPrompt, userText: rawText });
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error("Model returned invalid JSON");
-  }
-
+  const parsed = await runShapeEngine({ engine, profile, userText: rawText });
   const output = validateOutput(profile, parsed);
 
   const review_markdown = castToMarkdown(profile, output);
-  const host_json_view = castToHostJson(profile, output);
+  const host_json_view = castToHostJson(profile, output, engine);
   const check = runCheck(profile, output);
 
   return {
+    engine,
     profile,
     output,
     casts: {
