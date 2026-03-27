@@ -1,6 +1,10 @@
 import OpenAI from "openai";
 
-const client = new OpenAI();
+let _client: OpenAI | null = null;
+function getClient() {
+  if (!_client) _client = new OpenAI();
+  return _client;
+}
 
 export async function runShapePrompt({
   systemPrompt,
@@ -9,7 +13,7 @@ export async function runShapePrompt({
   systemPrompt: string;
   userText: string;
 }): Promise<string> {
-  const response = await client.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: "gpt-4.1-mini",
     temperature: 0,
     response_format: { type: "json_object" },
