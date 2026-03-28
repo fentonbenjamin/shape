@@ -18,7 +18,7 @@ function getAnthropic() {
 
 let _gemini: GoogleGenAI | null = null;
 function getGemini() {
-  if (!_gemini) _gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY ?? "" });
+  if (!_gemini) _gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? "" });
   return _gemini;
 }
 
