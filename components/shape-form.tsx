@@ -78,12 +78,12 @@ export function ShapeForm({
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Paste messy text here..."
-        rows={10}
+        rows={6}
         disabled={loading}
         className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-4 text-sm font-mono text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 resize-y disabled:opacity-50 transition-opacity"
       />
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-xs text-neutral-600">
             {text.length.toLocaleString()} chars
           </span>

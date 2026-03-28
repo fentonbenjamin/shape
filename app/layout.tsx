@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Shape",
-  description: "Paste text. Get structure. See what survived.",
+  description: "Paste text, get structured meaning.",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({

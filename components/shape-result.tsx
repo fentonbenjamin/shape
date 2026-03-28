@@ -92,26 +92,43 @@ export function ShapeResult({ result, sourceText }: { result: ShapeResult; sourc
   const [badgesVisible, setBadgesVisible] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [permalink, setPermalink] = useState<string | null>(null);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
   const { user } = useAuth();
   const { profile, engine, spine, output, support, casts, check, fallback_reason } = result;
 
-  useEffect(() => { setSaved(false); }, [result]);
+  useEffect(() => { setSaved(false); setPermalink(null); }, [result]);
 
-  async function handleSave() {
-    if (!user) {
-      setShowSignIn(true);
-      return;
+  // Auto-save after sign-in if save was pending
+  useEffect(() => {
+    if (user && pendingSave && !saved && !saving) {
+      setPendingSave(false);
+      doSave();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pendingSave]);
+
+  async function doSave() {
     setSaving(true);
     try {
-      await saveShape(sourceText, result);
+      const id = await saveShape(sourceText, result);
       setSaved(true);
+      setPermalink(`${window.location.origin}/s/${id}`);
     } catch {
       // silently fail — user can retry
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSave() {
+    if (!user) {
+      setPendingSave(true);
+      setShowSignIn(true);
+      return;
+    }
+    await doSave();
   }
 
   // Staggered reveal: badges → title → spine lines one by one
@@ -136,7 +153,7 @@ export function ShapeResult({ result, sourceText }: { result: ShapeResult; sourc
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-8 space-y-6">
-      <div className={`flex items-center gap-3 transition-all duration-300 ${badgesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+      <div className={`flex flex-wrap items-center gap-2 sm:gap-3 transition-all duration-300 ${badgesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
         <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-800 text-neutral-400">
           {profile === "narrative_segment_v0" ? "narrative" : "concept"}
         </span>
@@ -309,6 +326,14 @@ export function ShapeResult({ result, sourceText }: { result: ShapeResult; sourc
         >
           {saved ? "Saved" : saving ? "Saving…" : "Save"}
         </button>
+        {permalink && (
+          <button
+            onClick={() => copyToClipboard(permalink)}
+            className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+          >
+            Copy link
+          </button>
+        )}
       </div>
       {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
     </div>

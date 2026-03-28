@@ -15,7 +15,7 @@ export default function Home() {
 
   return (
     <AuthProvider>
-      <main className="min-h-screen flex flex-col items-center px-4 py-16 relative">
+      <main className="min-h-screen flex flex-col items-center px-3 sm:px-4 py-8 sm:py-16 relative">
         {loading && (
           <div className="fixed top-0 left-0 right-0 h-0.5 z-50">
             <div className="h-full bg-neutral-400 animate-pulse" style={{ width: "100%" }} />
@@ -24,11 +24,11 @@ export default function Home() {
 
         <UserMenu />
 
-        <div className="w-full max-w-3xl text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-neutral-100">
+        <div className="w-full max-w-3xl text-center mb-6 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-100">
             Shape
           </h1>
-          <p className="text-neutral-500 mt-3 text-lg">
+          <p className="text-neutral-500 mt-2 sm:mt-3 text-base sm:text-lg">
             Paste text, get structured meaning.
           </p>
         </div>
