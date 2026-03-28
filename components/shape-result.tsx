@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import type { ShapeResult, NarrativeSegment, ConceptBlob, SupportMap } from "@/lib/types";
 import { CastView } from "./cast-view";
 import { CheckView } from "./check-view";
+import { useAuth } from "./auth-provider";
+import { SignInModal } from "./sign-in-modal";
+import { saveShape } from "@/lib/save-shape";
 
 function downloadFile(content: string, filename: string, type: string) {
   const blob = new Blob([content], { type });
@@ -81,13 +84,35 @@ function ConceptView({ output }: { output: ConceptBlob }) {
   );
 }
 
-export function ShapeResult({ result }: { result: ShapeResult }) {
+export function ShapeResult({ result, sourceText }: { result: ShapeResult; sourceText: string }) {
   const [tab, setTab] = useState<"readable" | "json" | "card">("readable");
   const [showFull, setShowFull] = useState(false);
   const [visibleSpine, setVisibleSpine] = useState(0);
   const [titleVisible, setTitleVisible] = useState(false);
   const [badgesVisible, setBadgesVisible] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const { user } = useAuth();
   const { profile, engine, spine, output, support, casts, check, fallback_reason } = result;
+
+  useEffect(() => { setSaved(false); }, [result]);
+
+  async function handleSave() {
+    if (!user) {
+      setShowSignIn(true);
+      return;
+    }
+    setSaving(true);
+    try {
+      await saveShape(sourceText, result);
+      setSaved(true);
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setSaving(false);
+    }
+  }
 
   // Staggered reveal: badges → title → spine lines one by one
   useEffect(() => {
@@ -247,7 +272,7 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
           onClick={() => copyToClipboard(spine.join("\n"))}
           className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
         >
-          Copy spine
+          Copy summary
         </button>
         <button
           onClick={() => copyToClipboard(casts.review_markdown)}
@@ -273,7 +298,19 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
         >
           Download markdown
         </button>
+        <button
+          onClick={handleSave}
+          disabled={saved || saving}
+          className={`text-xs font-mono px-3 py-1.5 rounded border transition-colors ${
+            saved
+              ? "border-green-800 text-green-500"
+              : "border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600"
+          } disabled:cursor-default`}
+        >
+          {saved ? "Saved" : saving ? "Saving…" : "Save"}
+        </button>
       </div>
+      {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
     </div>
   );
 }

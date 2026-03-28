@@ -8,7 +8,7 @@ export function ShapeForm({
   onError,
   onLoading,
 }: {
-  onResult: (data: unknown) => void;
+  onResult: (data: unknown, sourceText: string) => void;
   onError: (msg: string) => void;
   onLoading: (loading: boolean) => void;
 }) {
@@ -54,7 +54,7 @@ export function ShapeForm({
       if (!res.ok) {
         onError(data.error || "Something went wrong");
       } else {
-        onResult(data);
+        onResult(data, text);
       }
     } catch {
       onError("Failed to reach the API");
