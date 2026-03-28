@@ -24,13 +24,23 @@ export default function Home() {
 
         <UserMenu />
 
-        <div className="w-full max-w-3xl text-center mb-6 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-100">
-            Shape
-          </h1>
-          <p className="text-neutral-500 mt-2 sm:mt-3 text-base sm:text-lg">
-            Paste text, get structured meaning.
-          </p>
+        <div className="w-full max-w-3xl mb-6 sm:mb-12">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-100">
+                Shape
+              </h1>
+              <p className="text-neutral-500 mt-1 sm:mt-2 text-sm sm:text-base">
+                Paste text, get structured meaning.
+              </p>
+            </div>
+            <a
+              href="/history"
+              className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+            >
+              History
+            </a>
+          </div>
         </div>
 
         <ShapeForm
