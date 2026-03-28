@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./auth-provider";
 import { SignInModal } from "./sign-in-modal";
 
 export function UserMenu() {
-  const { user, loading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [showSignIn, setShowSignIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (loading) return null;
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
 
   return (
     <>

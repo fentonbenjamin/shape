@@ -29,7 +29,7 @@ export default function Home() {
             Shape
           </h1>
           <p className="text-neutral-500 mt-3 text-lg">
-            Paste text. Get structure. See what survived.
+            Paste text, get structured meaning.
           </p>
         </div>
 
