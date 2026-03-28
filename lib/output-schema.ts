@@ -53,8 +53,29 @@ export type ConceptBlob = z.infer<typeof conceptBlobSchema>;
 export type ShapeProfile = "narrative_segment_v0" | "concept_blob_v0";
 export type ShapeOutput = NarrativeSegment | ConceptBlob;
 
+function normalizeSupportMap(data: Record<string, unknown>): Record<string, unknown> {
+  if (!data || typeof data !== "object") return data;
+  const support = (data as Record<string, unknown>).support;
+  if (support && typeof support === "object") {
+    for (const [field, entries] of Object.entries(support as Record<string, unknown>)) {
+      if (Array.isArray(entries)) {
+        for (const entry of entries) {
+          if (entry && typeof entry === "object" && "evidence" in entry) {
+            const e = entry as Record<string, unknown>;
+            if (typeof e.evidence === "string") {
+              e.evidence = [e.evidence];
+            }
+          }
+        }
+      }
+    }
+  }
+  return data;
+}
+
 export function validateModelResponse(profile: ShapeProfile, data: unknown) {
-  const parsed = shapeModelResponseSchema.parse(data);
+  const normalized = normalizeSupportMap(data as Record<string, unknown>);
+  const parsed = shapeModelResponseSchema.parse(normalized);
   if (profile === "narrative_segment_v0") {
     narrativeSegmentSchema.parse(parsed.result);
   } else {
