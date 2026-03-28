@@ -1,14 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { getSupabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 const AuthContext = createContext<{
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
-}>({ user: null, loading: true, signOut: async () => {} });
+}>({ user: null, loading: false, signOut: async () => {} });
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -19,28 +18,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = getSupabase();
+    let cancelled = false;
 
-    supabase.auth.getSession().then(({ data }: { data: { session: { user: User } | null } }) => {
-      setUser(data.session?.user ?? null);
-    }).catch(() => {
-      // auth unavailable — continue as anonymous
-    }).finally(() => {
-      setLoading(false);
-    });
+    async function init() {
+      try {
+        const { getSupabase } = await import("@/lib/supabase");
+        const supabase = getSupabase();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+        const { data } = await supabase.auth.getSession();
+        if (!cancelled) {
+          setUser(data.session?.user ?? null);
+          setLoading(false);
+        }
 
-    return () => subscription.unsubscribe();
+        supabase.auth.onAuthStateChange((_event: string, session: { user: User } | null) => {
+          if (!cancelled) {
+            setUser(session?.user ?? null);
+            setLoading(false);
+          }
+        });
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    init();
+    return () => { cancelled = true; };
   }, []);
 
   async function signOut() {
-    const supabase = getSupabase();
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      const { getSupabase } = await import("@/lib/supabase");
+      await getSupabase().auth.signOut();
+      setUser(null);
+    } catch {
+      // ignore
+    }
   }
 
   return (
