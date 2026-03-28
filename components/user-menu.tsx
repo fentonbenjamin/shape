@@ -21,12 +21,6 @@ export function UserMenu() {
             <span className="text-xs text-neutral-500 font-mono">
               {user.email}
             </span>
-            <a
-              href="/history"
-              className="text-xs font-mono text-neutral-500 hover:text-neutral-300 transition-colors"
-            >
-              history
-            </a>
             <button
               onClick={signOut}
               className="text-xs font-mono text-neutral-600 hover:text-neutral-400 transition-colors"

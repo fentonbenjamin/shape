@@ -24,7 +24,9 @@ export async function shape(
   const parsed = await runShapeEngine({ engine, profile, userText: rawText });
 
   const validated = validateModelResponse(profile, parsed);
-  const spine = validated.spine;
+  const spine = validated.spine.length > 0
+    ? validated.spine
+    : [validated.result.title];
   const output = validated.result;
   const support = validated.support as SupportMap;
 

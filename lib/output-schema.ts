@@ -43,7 +43,7 @@ export const conceptBlobSchema = z.object({
 
 // Full model response: spine + result + support
 export const shapeModelResponseSchema = z.object({
-  spine: z.array(z.string()).min(1).max(7),
+  spine: z.array(z.string()).max(7),
   result: z.union([narrativeSegmentSchema, conceptBlobSchema]),
   support: supportMapSchema,
 });
