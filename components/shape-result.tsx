@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ShapeResult, NarrativeSegment, ConceptBlob, SupportMap } from "@/lib/types";
 import { CastView } from "./cast-view";
 import { CheckView } from "./check-view";
+import { useAuth } from "./auth-provider";
+import { SignInModal } from "./sign-in-modal";
+import { saveShape } from "@/lib/save-shape";
 
 function downloadFile(content: string, filename: string, type: string) {
   const blob = new Blob([content], { type });
@@ -81,14 +84,76 @@ function ConceptView({ output }: { output: ConceptBlob }) {
   );
 }
 
-export function ShapeResult({ result }: { result: ShapeResult }) {
+export function ShapeResult({ result, sourceText }: { result: ShapeResult; sourceText: string }) {
   const [tab, setTab] = useState<"readable" | "json" | "card">("readable");
   const [showFull, setShowFull] = useState(false);
-  const { profile, spine, output, support, casts, check } = result;
+  const [visibleSpine, setVisibleSpine] = useState(0);
+  const [titleVisible, setTitleVisible] = useState(false);
+  const [badgesVisible, setBadgesVisible] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [permalink, setPermalink] = useState<string | null>(null);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
+  const { user } = useAuth();
+  const { profile, engine, spine, output, support, casts, check, fallback_reason } = result;
+
+  useEffect(() => { setSaved(false); setPermalink(null); }, [result]);
+
+  // Auto-save after sign-in if save was pending
+  useEffect(() => {
+    if (user && pendingSave && !saved && !saving) {
+      setPendingSave(false);
+      doSave();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pendingSave]);
+
+  async function doSave() {
+    setSaving(true);
+    try {
+      const id = await saveShape(sourceText, result);
+      setSaved(true);
+      setPermalink(`${window.location.origin}/s/${id}`);
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!user) {
+      setPendingSave(true);
+      setShowSignIn(true);
+      return;
+    }
+    await doSave();
+  }
+
+  // Staggered reveal: badges → title → spine lines one by one
+  useEffect(() => {
+    setVisibleSpine(0);
+    setTitleVisible(false);
+    setBadgesVisible(false);
+
+    const t0 = setTimeout(() => setBadgesVisible(true), 100);
+    const t1 = setTimeout(() => setTitleVisible(true), 350);
+
+    const spineTimers = spine.map((_, i) =>
+      setTimeout(() => setVisibleSpine(i + 1), 600 + i * 400)
+    );
+
+    return () => {
+      clearTimeout(t0);
+      clearTimeout(t1);
+      spineTimers.forEach(clearTimeout);
+    };
+  }, [result, spine]);
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-8 space-y-6">
-      <div className="flex items-center gap-3">
+      <div className={`flex flex-wrap items-center gap-2 sm:gap-3 transition-all duration-300 ${badgesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
         <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-800 text-neutral-400">
           {profile === "narrative_segment_v0" ? "narrative" : "concept"}
         </span>
@@ -99,20 +164,35 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
         }`}>
           {output.signal_level}
         </span>
+        <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-800 text-neutral-500">
+          {engine === "local" ? "local" : engine === "anthropic" ? "claude" : engine === "gemini" ? "gemini" : "gpt-4.1"}
+        </span>
         {check.compression_holds && (
           <span className="text-xs font-mono px-2 py-1 rounded bg-blue-900/30 text-blue-400">
             compressed
           </span>
         )}
       </div>
+      {fallback_reason && (
+        <p className="text-xs text-yellow-500/70 font-mono">
+          fell back to local engine — {fallback_reason}
+        </p>
+      )}
 
-      <h2 className="text-xl font-semibold text-neutral-100">{output.title}</h2>
+      <h2 className={`text-xl font-semibold text-neutral-100 transition-all duration-500 ${titleVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+        {output.title}
+      </h2>
 
-      {/* Spine — the primary value surface */}
+      {/* Spine — staggered reveal */}
       {spine.length > 0 && (
         <div className="space-y-2 py-2">
           {spine.map((s, i) => (
-            <p key={i} className="text-sm text-neutral-200 leading-relaxed border-l-2 border-neutral-700 pl-3">
+            <p
+              key={i}
+              className={`text-sm text-neutral-200 leading-relaxed border-l-2 border-neutral-700 pl-3 transition-all duration-500 ${
+                i < visibleSpine ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+              }`}
+            >
               {s}
             </p>
           ))}
@@ -209,7 +289,7 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
           onClick={() => copyToClipboard(spine.join("\n"))}
           className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
         >
-          Copy spine
+          Copy summary
         </button>
         <button
           onClick={() => copyToClipboard(casts.review_markdown)}
@@ -235,7 +315,27 @@ export function ShapeResult({ result }: { result: ShapeResult }) {
         >
           Download markdown
         </button>
+        <button
+          onClick={handleSave}
+          disabled={saved || saving}
+          className={`text-xs font-mono px-3 py-1.5 rounded border transition-colors ${
+            saved
+              ? "border-green-800 text-green-500"
+              : "border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600"
+          } disabled:cursor-default`}
+        >
+          {saved ? "Saved" : saving ? "Saving…" : "Save"}
+        </button>
+        {permalink && (
+          <button
+            onClick={() => copyToClipboard(permalink)}
+            className="text-xs font-mono px-3 py-1.5 rounded border border-neutral-800 text-neutral-500 hover:text-neutral-300 hover:border-neutral-600 transition-colors"
+          >
+            Copy link
+          </button>
+        )}
       </div>
+      {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
     </div>
   );
 }

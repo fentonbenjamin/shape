@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { ShapeProfile } from "@/lib/types";
+import type { ShapeProfile, ShapeEngine } from "@/lib/types";
 
 export function ShapeForm({
   onResult,
   onError,
   onLoading,
 }: {
-  onResult: (data: unknown) => void;
+  onResult: (data: unknown, sourceText: string) => void;
   onError: (msg: string) => void;
   onLoading: (loading: boolean) => void;
 }) {
   const [text, setText] = useState("");
   const [profile, setProfile] = useState<ShapeProfile | "auto">("auto");
+  const [engine, setEngine] = useState<ShapeEngine>("openai");
   const [loading, setLoading] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -40,6 +41,7 @@ export function ShapeForm({
     try {
       const body: Record<string, string> = { text };
       if (profile !== "auto") body.profile = profile;
+      body.engine = engine;
 
       const res = await fetch("/api/shape", {
         method: "POST",
@@ -52,7 +54,7 @@ export function ShapeForm({
       if (!res.ok) {
         onError(data.error || "Something went wrong");
       } else {
-        onResult(data);
+        onResult(data, text);
       }
     } catch {
       onError("Failed to reach the API");
@@ -76,12 +78,12 @@ export function ShapeForm({
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Paste messy text here..."
-        rows={10}
+        rows={6}
         disabled={loading}
         className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-4 text-sm font-mono text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 resize-y disabled:opacity-50 transition-opacity"
       />
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-xs text-neutral-600">
             {text.length.toLocaleString()} chars
           </span>
@@ -94,6 +96,17 @@ export function ShapeForm({
             <option value="auto">auto-detect</option>
             <option value="narrative_segment_v0">narrative</option>
             <option value="concept_blob_v0">concept</option>
+          </select>
+          <select
+            value={engine}
+            onChange={(e) => setEngine(e.target.value as ShapeEngine)}
+            disabled={loading}
+            className="text-xs bg-neutral-900 border border-neutral-800 rounded px-2 py-1 text-neutral-400 focus:outline-none focus:border-neutral-600 disabled:opacity-50"
+          >
+            <option value="openai">GPT-4.1</option>
+            <option value="anthropic">Claude Sonnet 4.6</option>
+            <option value="gemini">Gemini 2.5 Flash</option>
+            <option value="local">Local (no LLM)</option>
           </select>
           {loading && (
             <span className="text-xs text-neutral-600 tabular-nums">
