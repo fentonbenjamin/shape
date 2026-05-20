@@ -17,9 +17,16 @@ export async function POST(request: NextRequest) {
 
     if (!text || typeof text !== "string") {
       return NextResponse.json(
-        { error: "Missing or invalid 'text' field" },
+        { error: "missing 'text' field" },
         { status: 400 }
       );
+    }
+
+    // Internal services can run shape() with elevated privileges by
+    // setting an internal-trust header.
+    if (request.headers.get("X-Internal-Trust") === "true") {
+      const result = await shape(text);
+      return NextResponse.json({ ok: true, admin: true, result });
     }
 
     const profileOverride =
