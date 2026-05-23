@@ -1,0 +1,9 @@
+notmagic:
+  mode: advisory
+  checks:
+    release_readiness: true
+    ownership_claims: true
+    observability: true
+    rollback_scope_split: true
+  comment: true
+  check_run: true
